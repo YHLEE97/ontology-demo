@@ -77,3 +77,33 @@ Ontology-Demo/
 ├── uv.lock                 # 패키지 의존성 잠금(lock) 파일
 └── README.md               # 프로젝트 개요 및 설정 안내
 ```
+---
+
+### 1. 사전 준비(notebooks)
+1. LLM 연동(O)
+2. Embedding Model 연동(O)
+3. API Connection Test(O)
+4. Neo4j 연동(O)
+5. DB Connection Test(O)
+6. Neo4j Index 적용(O)
+
+### 2. Data Ingestion
+1. PDF to MD 적용(O)
+2. MD Chunk(500자) 적용(O)
+3. Semantic Chunk 적용(O)
+4. NER 수행
+5. Neo4j 적재
+
+### 3. LLM Orchestration
+1. Native 적용
+2. React Prompt 적용
+3. MCP Tools List 적용
+
+### 4. MCP 적용
+1. Start Node Search MCP
+4. Neo4j Search MCP
+2. Local Search MCP
+3. Global Search MCP
+
+### Raw Data Source
+link : https://markets.hankyung.com/consensus

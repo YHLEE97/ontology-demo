@@ -78,3 +78,8 @@ desktop.ini
 logs/
 *.csv
 *.parquet
+
+# ========================
+# Neo4j - Docker
+# ========================
+neo4j_data/

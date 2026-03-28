@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  neo4j:
+    image: neo4j:5
+    container_name: neo4j_database
+    ports:
+      - "7474:7474" # 웹 브라우저 접속용 (HTTP)
+      - "7687:7687" # 애플리케이션 연결용 (Bolt 프로토콜)
+    environment:
+      # 접속 비밀번호 설정 (초기 ID는 neo4j)
+      - NEO4J_AUTH=neo4j/12345678
+      - NEO4J_PLUGINS=["apoc"]
+    volumes:
+      - ./neo4j_data/data:/data       # 실제 DB 데이터 저장
+      - ./neo4j_data/logs:/logs       # 로그 저장
+      - ./neo4j_data/import:/var/lib/neo4j/import # CSV 등 외부 데이터 임포트 폴더
+      - ./neo4j_data/plugins:/plugins # 추가 플러그인 폴더
+    restart: unless-stopped

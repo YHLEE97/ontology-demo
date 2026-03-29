@@ -33,6 +33,7 @@ recursive_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
 
 processed_chunks = []
 current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+chunk_id_counter = 1
 
 print(f"[System] 청킹 프로세스를 시작합니다. (입력 행 수: {len(df)})")
 
@@ -42,40 +43,57 @@ for idx, row in df.iterrows():
     src_file = row.get("source_file", "unknown")
     raw_md = row["markdown_text"]
 
+    print(idx)
+    print(page_num)
+
     # --- Step 1: 1차 청킹 (Header 기반) ---
     header_splits = md_splitter.split_text(raw_md)
 
     for doc in header_splits:
         content = doc.page_content
-        token_len = dict_token_count(content)
+        content_token_len = dict_token_count(content)
 
-        # --- Step 2: 2차 청킹 여부 판단 ---
-        if token_len > 1200:
-            # 1200 토큰이 넘으면 2차 청킹 수행 (chunk_type: 2)
-            sub_splits = recursive_splitter.split_text(content)
-            for sub_text in sub_splits:
-                processed_chunks.append(
-                    {
-                        "page_number": page_num,
-                        "source_file": src_file,
-                        "markdown_text": sub_text,
-                        "processed_at": current_time,
-                        "chunk_type": 2,  # 2차 청킹 결과물
-                        "token_count": dict_token_count(sub_text),
-                    }
-                )
-        else:
-            # 적절한 길이면 1차 청킹으로 마감 (chunk_type: 1)
+        # --- Step 2: 분할 방식에 따른 chunk_type 결정 ---
+        if content_token_len < 1200:
+            # 1200 토큰 미만이라 1차 청킹으로 마감
             processed_chunks.append(
                 {
-                    "page_number": page_num,
-                    "source_file": src_file,
-                    "markdown_text": content,
+                    "original_file_name": "sgc_energy",
+                    "chunk_id": chunk_id_counter,
+                    "md_id": f"sgc_energy_page_{page_num}",
+                    "text": content,
                     "processed_at": current_time,
-                    "chunk_type": 1,  # 1차 청킹 결과물
-                    "token_count": token_len,
+                    "chunk_type": 1,
+                    "token_count": content_token_len,
                 }
             )
+            chunk_id_counter += 1
+        else:
+            # 1200 토큰 이상이라 재분할(2차 청킹) 수행
+            sub_splits = recursive_splitter.split_text(content)
+
+            for i, sub_text in enumerate(sub_splits):
+                sub_token_len = dict_token_count(sub_text)
+
+                # chunk_type 결정 (맨 처음 1200은 1, 이후는 계속 2)
+                if i == 0:
+                    chunk_type = 1
+                else:
+                    # 중간에 꽉 차게 잘린 조각들
+                    chunk_type = 2
+
+                processed_chunks.append(
+                    {
+                        "original_file_name": "sgc_energy",
+                        "chunk_id": chunk_id_counter,
+                        "md_id": f"sgc_energy_page_{page_num}",
+                        "text": sub_text,
+                        "processed_at": current_time,
+                        "chunk_type": chunk_type,
+                        "token_count": sub_token_len,
+                    }
+                )
+                chunk_id_counter += 1
 
 # 4. 결과 저장 및 확인
 output_df = pd.DataFrame(processed_chunks)

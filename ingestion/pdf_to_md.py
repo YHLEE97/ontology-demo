@@ -1,6 +1,5 @@
 import os
 import base64
-import yaml
 import pymupdf
 import pandas as pd
 from datetime import datetime
@@ -8,6 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
+from config.prompts.pdf_to_md_prompt import SYSTEM_PROMPT, HUMAN_PROMPT
 
 # 환경 변수 로드
 load_dotenv()
@@ -27,11 +27,7 @@ llm = ChatOpenAI(
 )
 
 
-def load_prompt_from_yaml(file_path: str):
-    """YAML 파일에서 프롬프트 설정과 텍스트를 로드합니다."""
-    with open(file_path, "r", encoding="utf-8") as file:
-        config = yaml.safe_load(file)
-    return config
+# (Local load_prompt_from_yaml replaced by util.prompt_loader)
 
 
 print("[System] PDF 파일 처리를 시작합니다. 대상 파일:", pdf_path.name)
@@ -39,9 +35,7 @@ print("[System] PDF 파일 처리를 시작합니다. 대상 파일:", pdf_path.
 # 결과를 담을 리스트
 parsed_data = []
 
-# 시스템 지시문 (프롬프트)
-prompt_config = load_prompt_from_yaml("config/prompts/pdf_to_md_prompt.yml")
-system_prompt = prompt_config["system_prompt"]
+# 
 
 try:
     with pymupdf.open(pdf_path) as doc:
@@ -62,12 +56,12 @@ try:
 
             # VLM에 전달할 메시지 구성
             messages = [
-                {"role": "system", "content": system_prompt},
+                {"role": "system", "content": SYSTEM_PROMPT},
                 HumanMessage(
                     content=[
                         {
                             "type": "text",
-                            "text": "이 이미지의 내용을 마크다운으로 변환해 줘.",
+                            "text": HUMAN_PROMPT,
                         },
                         {
                             "type": "image_url",
